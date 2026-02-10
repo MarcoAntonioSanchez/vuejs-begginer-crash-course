@@ -1,182 +1,186 @@
-# Vue Begginer's crash course from OpanAI's chatGPT
+# Vue Begginer's crash course
 
-## Level 0 - Fundamental's before getting into vue code
+## Level 1 - Environment and base structure
 
 > _M. SÁNCHEZ:_
 >
-> Prepare a new mindset before writing any single line of code
+> The right way from the beginning
+
+This level's goal is to fully understand how a Vue app is born, what each file does what and why the strcture it's how it is. After this level Vue won't be a black-box anymore.
 
 ---
 
-### 1. What problem does Vue solve?
+### 1. Why Vue 3 + Vite?
 
-> _M. SÁNCHEZ:_
->
-> Before Vue i just have **HTML** _(sructure)_, **CSS** _(styles)_ and **JS** _(logic)_ with UI state's handled by hand by my self. As the UI grows the code gets larger and larger, complicating states with a lot of files and a lot of conditions, wich require updates made by hand resulting on fragile code very hard to mantain.
+Vue 3:
 
-Vue exists to solve **sync between state and UI**.
+- Modern API.
+- Better performance.
+- More TS support.
+- Native composition API.
 
----
+Vue 2 it's **not the right** way for fresh projects.
 
-### 2. What is Vue really?
+Vite (a bundler). Vite it's not Vue, Vite it's a tool that:
 
-> _M. SÁNCHEZ:_
->
-> A progressive framework. Meaning that can be used with the basics only and scale up to: **SPA** _(Single Page Application)_, **Routing** _(/subpage)_, **State management** _(active = null)_, **SSR** _(Server Side Rendering)_ and **Complex Apps / projects** _(professional level development)_.
+- Setups development server.
+- Compile projects.
+- Build to production.
 
-**Vue won't force you** to all of these previously mentioned from day 1
+Why Vite?
 
----
+- Instant development server.
+- Real HMR (Hot Module Replacement).
+- Anonymous setting.
+- Current Vue standard ecosystem.
 
-### 3. What is SPA and why Vue fits well with it?
-
-> _M. SÁNCHEZ:_
->
-> **SPA** stands for: _Single Page Application_. This means: A single HTML document, changing content without a page refresh and, last but not least, the state resides in memory _(JS)_.
-
-- **Classic flow**: User -> Change's state -> UI gets updated.
-- **Without Vue**: The dev must do all this job _(classic flow)_ by hand.
-- **With Vue**: State changes and Vue handles the UI for me _(dev)_.
+Vue **recommends Vite officially**.
 
 ---
 
-### 4. Key concept: State
+### 2. Project creation (what really happens)
 
-> _M. SÁNCHEZ:_
->
-> If **i understand this** _(state as key concept)_... i **understand Vue**.
+Typical command:
 
-State = data representing the UI.
+`npm create vue@latest`
 
-Mental sample (To-do):
+This command:
+
+1. Download's official template.
+2. Setup Vue.
+3. Prepare Vue 3.
+4. Sets a **opinione but flexible base**.
+
+No magic here, just scaffolding.
+
+---
+
+### 3. Folder structure (critic lecture)
+
+Typical base structure:
+
+- Project/
+  - index.html
+  - package.json
+  - vite.config.js
+  - src/
+    - main.js
+    - App.vue
+    - assets/
+
+Let's get over it file by file.
+
+---
+
+### 4. index.html (way more important than you think)
+
+`<div id='app'></div>`
+
+Here it is where Vue **gets mounted** (id = app)
+
+Key concept:
+
+- Vue doesn't generates the initial HTML.
+- Vue it's mounted over an existing container.
+
+This is key for:
+
+- SPA (Single Page Applications)
+- SSR (Server Side Rendering)
+- Integrations
+
+---
+
+### 5. main.js (the real entry point)
+
+Typical code sample:
 
 ```JS
-todos = [
-    { text: 'Learn Vue', done: false},
-    { text: 'Make a commit', done: true}
-]
+import { createApp } from 'vue'
+import App from './App.vue'
+
+createApp(App).mount(#app)
+
 ```
 
-**UI** is just a projection of the **State**. Vue lives to answer this single question: _If state changes... What should change on screen?_
+What this mean:
+
+- createApp(App), creates a Vue application.
+- App, root component.
+- .mount(#app), connencts Vue with the real DOM.
+
+Everything that gets through the app **lives under** `App.vue`
 
 ---
 
-### 5. Reactivity (Vue's super power)
+### 6. App.vue (root component)
 
-What is reactivity?
-
-> _M. SÁNCHEZ:_
->
-> It's the capacity of: Detecting changes in data and react to it, automatically.
-
-In Vue:
-
-- Value changes.
-- Vue detects it.
-- Vue updates ONLY the necessary on the DOM.
-
-Important:
-
-- Vue DON'T re-render the whole page.
-- Uses a virtual DOM.
-
----
-
-### 6. Virtual DOM (smoke free)
-
-Simple idea:
-
-1. Vue have a virtual representation of the UI.
-2. Changes state.
-3. Vue compares: Before and After.
-4. Only apply's the minimun changes to the real DOM.
-
-Result:
-
-- Performance.
-- Declarative code.
-- human-error reduction.
-
----
-
-### 7. Declarative VS Imperative
-
-Imperative (vanilla JS):
+Minimum sample:
 
 ```JS
-if (isLogged) {
-    showMenu();
-} else {
-    hideMenu();
-}
+<template>
+    <h1>Hello Vue</h1>
+</template>
+
+<script>
+    export default {
+        name: 'App'
+    }
+</script>
 ```
 
-Declarative (Vue):
+Important concept:
 
-```JS
-<Menu v-if="isLogged" />
-```
+- App.vue
+  - Should not contain complex logic.
+  - Act's like a root layout.
+  - Orchestrates the components.
 
-I declare **what** happens... Vue decides **how** it's done.
-
----
-
-### 8. Components (think in 'pieces')
-
-Vue forces devs (for good) to think of:
-
-- Small, Reusable and Isolated components
-- With clear responsibillities
-
-Mental sample (Todo SPA project):
-
-- App
-  - TodoForm
-  - TodoList
-    - TodoItem
-  - Filters
-
-This is **not a technical detail**... It's a **way of think of**.
+If `App.vue` gets giant, something it's wrong.
 
 ---
 
-### 9. What Vue does NOT do
+### 7. Single File Components (SFC)
 
-Vue does **NOT**:
+A `.vue` is an SFC. Advantages:
 
-- Handles DB.
-- Fetch for you.
-- Decide arquitecture.
-- And it doesn't save you from bad decisions either.
+- Cohesion.
+- Clear scope.
+- Encapsulated styles.
+- Breve maintenance.
 
-Vue **amplifies**:
-
-- Good practices, leads to best results.
-- Bad practices, leads to a quicker mess.
+Vue **prefers cohesion over artifitial separation.**
 
 ---
 
-Final thoughts over level cero / 0 - Fundamentals: I should remember the following:
+### 8. Complete boot flow (mental)
 
-- Vue sync's state < - > UI (bidirectionally).
-- UI it's a function of the state.
-- Reactivity it's the core.
-- Components are the base.
-- Declarative > imperative.
-- Vue it's not magic, it's arquitecture.
+Visualized like:
 
-If tomorrow is added:
+`index.html` -> `main.js` -> `createApp(App)` -> `App.vue` -> `Child components`
 
-- "Backend".
-- "Users".
-- "Roles".
+Understanding this flow, means **understanding every Vue App**.
 
-What should change?
+---
 
-- "The UI? The state?"
-- "Or both?"
+### 9. What not to touch yet (common temptations)
 
-Vue it's mented to answer very well to this type of questions...
+- DONT setup Webpack
+- DONT install 20 dependencies
+- DONT implement Tailwind yet
+- DONT think of router nor store
+
+Understand **the base**, first.
+
+---
+
+**Final thoughts** over level one / 1 - Environment and base structure: I already know the following, with clearance:
+
+- Vite it's not equal to Vue.
+- index.html starts the app.
+- App.vue is the root.
+- Everything is a component.
+- No arbitrary structure.
 
 ---
 
