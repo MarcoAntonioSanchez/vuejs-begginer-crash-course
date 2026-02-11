@@ -1,186 +1,207 @@
 # Vue Begginer's crash course
 
-## Level 1 - Environment and base structure
+## Level 2 - Inside Vue
 
 > _M. SÁNCHEZ:_
 >
-> The right way from the beginning
+> Template, directives and reactive render
 
-This level's goal is to fully understand how a Vue app is born, what each file does what and why the strcture it's how it is. After this level Vue won't be a black-box anymore.
-
----
-
-### 1. Why Vue 3 + Vite?
-
-Vue 3:
-
-- Modern API.
-- Better performance.
-- More TS support.
-- Native composition API.
-
-Vue 2 it's **not the right** way for fresh projects.
-
-Vite (a bundler). Vite it's not Vue, Vite it's a tool that:
-
-- Setups development server.
-- Compile projects.
-- Build to production.
-
-Why Vite?
-
-- Instant development server.
-- Real HMR (Hot Module Replacement).
-- Anonymous setting.
-- Current Vue standard ecosystem.
-
-Vue **recommends Vite officially**.
+This level's goal is to fully understand how Vue transforms state in UI, how "reads" the template and how components works without touching (by hand) the DOM. Also, this level is foundational: if gets dominated, the rest feels natural.
 
 ---
 
-### 2. Project creation (what really happens)
+### 1. The template is not the regular HTML
 
-Typical command:
+Looks similar, but `<template>` is:
 
-`npm create vue@latest`
+- Declarative.
+- Reactive.
+- Vue controlled.
 
-This command:
+The template is a **function of the state.**
 
-1. Download's official template.
-2. Setup Vue.
-3. Prepare Vue 3.
-4. Sets a **opinione but flexible base**.
+Mindset: UI = f(state)
 
-No magic here, just scaffolding.
-
----
-
-### 3. Folder structure (critic lecture)
-
-Typical base structure:
-
-- Project/
-  - index.html
-  - package.json
-  - vite.config.js
-  - src/
-    - main.js
-    - App.vue
-    - assets/
-
-Let's get over it file by file.
+Dev decides _what_ should be shown. Vue decides _how_ to do it.
 
 ---
 
-### 4. index.html (way more important than you think)
+### 2. Interpolation `{{  }}`
 
-`<div id='app'></div>`
+Works to show data:
 
-Here it is where Vue **gets mounted** (id = app)
+`<p>{{ title }}</p>`
 
-Key concept:
+Important rules:
 
-- Vue doesn't generates the initial HTML.
-- Vue it's mounted over an existing container.
+- Inside, resides JavaScript.
+- Expressions only.
+- Gets evaluated once the state changes.
 
-This is key for:
-
-- SPA (Single Page Applications)
-- SSR (Server Side Rendering)
-- Integrations
-
----
-
-### 5. main.js (the real entry point)
-
-Typical code sample:
+GOOD practice:
 
 ```JS
-import { createApp } from 'vue'
-import App from './App.vue'
-
-createApp(App).mount(#app)
+{{ count + 1 }}
+{{ isDone ? 'Done' : 'Pending' }}
 
 ```
 
-What this mean:
+BAD practice:
 
-- createApp(App), creates a Vue application.
-- App, root component.
-- .mount(#app), connencts Vue with the real DOM.
-
-Everything that gets through the app **lives under** `App.vue`
-
----
-
-### 6. App.vue (root component)
-
-Minimum sample:
-
-```JS
-<template>
-    <h1>Hello Vue</h1>
-</template>
-
-<script>
-    export default {
-        name: 'App'
-    }
-</script>
+```
+{{ if (x) {...} }}
+{{ let a = 5 }}
 ```
 
-Important concept:
+---
 
-- App.vue
-  - Should not contain complex logic.
-  - Act's like a root layout.
-  - Orchestrates the components.
+### 3. Directives: Instructions to Vue
 
-If `App.vue` gets giant, something it's wrong.
+Directives tell Vue how a node should be treated.
+
+`v-bind` (binding attributes):
+
+`<img v-bind:src="imageUrl" />`
+
+Shortcut:
+
+`<img :src="imageUrl">`
+
+Mindset:
+
+> _M. SÁNCHEZ:_
+>
+> This attribute depends on the state
+
+Do not _set_ attributes manually. Let them react.
+
+`v-on` (events)
+
+`<button v-on:click="increment">+</button>`
+
+Shortcut:
+
+`<button @click="increment">+</button>`
+
+Vue listens to the event and runs **logic**, not the DOM.
 
 ---
 
-### 7. Single File Components (SFC)
+### 4. Conditional render
 
-A `.vue` is an SFC. Advantages:
+```JS
+v-if
 
-- Cohesion.
-- Clear scope.
-- Encapsulated styles.
-- Breve maintenance.
+<p v-if="isLogged">Bienvenido</p>
+```
 
-Vue **prefers cohesion over artifitial separation.**
+- The element exists or not
+- Its created and destroyed
+
+`v-else` / `v-else-if`
+
+```JS
+<p v-if="loading">Loading...</p>
+<p v-else>Ready</p>
+```
+
+```JS
+v-show
+
+<p v-show="isLogged">Bienvenido</p>
+```
+
+- Exist since always.
+- The only change is `display: none`.
+
+Practical rule:
+
+- Frequent changes, use v-show.
+- Occasional changes, use v-if.
 
 ---
 
-### 8. Complete boot flow (mental)
+### 5. Lists with `v-for` (very important)
 
-Visualized like:
+```JS
+<li v-for="todo in todos" :key="todo.id">
+    {{ todo.text }}
+</li>
+```
 
-`index.html` -> `main.js` -> `createApp(App)` -> `App.vue` -> `Child components`
+The `:key` it's not optative. Vue uses the key for:
 
-Understanding this flow, means **understanding every Vue App**.
+- Node's identification.
+- Render's optimization.
+- Good to Avoid visual bugs.
+
+DON'T:
+
+`:key="index"`
+
+INSTEAD, DO:
+
+`:key="todo.id"`
 
 ---
 
-### 9. What not to touch yet (common temptations)
+### 6. State and methods (base concept)
 
-- DONT setup Webpack
-- DONT install 20 dependencies
-- DONT implement Tailwind yet
-- DONT think of router nor store
+Without entering to the composition API, key concept is:
 
-Understand **the base**, first.
+- State: reactive data.
+- Methods: functions that change the state.
+
+Event -> Method -> State changes -> Vue updates the UI.
+
+DONT'S:
+
+- DOM Manipulation.
+- "Forced" updates.
 
 ---
 
-**Final thoughts** over level one / 1 - Environment and base structure: I already know the following, with clearance:
+### 7. Vue re-renders... everything?
 
-- Vite it's not equal to Vue.
-- index.html starts the app.
-- App.vue is the root.
-- Everything is a component.
-- No arbitrary structure.
+Short answer **no**, but Vue do:
+
+- Detects whats changed.
+- Compares virtual DOM.
+- Updates **necessary's only**.
+
+And this is why:
+
+- No worrys for premature performance issues.
+- Gain focus over arquitecture.
+
+---
+
+### 8. Common anti-patterns (avoid them from now on)
+
+Heavy logic on the template:
+
+`{{ calculateTotal(items, tax, discount) }}`
+
+Use of Vue as jQuery:
+
+`document.querySelector(...)`
+
+Ambiguous states:
+
+`status = 1 // que es 1?`
+
+Clearance gets the best out of Vue.
+
+---
+
+**Final thoughts** over level two / 2 - Inside Vue:
+
+- Template is declarative.
+- `{{  }}` just for expressions.
+- `v-bind` connects state -> attributes.
+- `v-on` connects events -> logic.
+- `v-if` and `v-for` controlls -> render.
+- UI reacts to state not to the DOM.
 
 ---
 
