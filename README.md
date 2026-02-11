@@ -1,200 +1,261 @@
 # Vue Begginer's crash course
 
-## Level 2 - Inside Vue
+## Level 3 - Composition API
 
 > _M. SÁNCHEZ:_
 >
-> Template, directives and reactive render
+> Here, memorizes stop and understanding beggins.
 
-This level's goal is to fully understand how Vue transforms state in UI, how "reads" the template and how components works without touching (by hand) the DOM. Also, this level is foundational: if gets dominated, the rest feels natural.
+This level's goal is to fully understand the following:
 
----
-
-### 1. The template is not the regular HTML
-
-Looks similar, but `<template>` is:
-
-- Declarative.
-- Reactive.
-- Vue controlled.
-
-The template is a **function of the state.**
-
-Mindset: UI = f(state)
-
-Dev decides _what_ should be shown. Vue decides _how_ to do it.
+- Why the API composition exists.
+- How does it really works.
+- Modern reactivity mindset.
+- When to use `ref`, `reactive`, `computed`, `watch`.
+- How everything connects to the template.
 
 ---
 
-### 2. Interpolation `{{  }}`
+### 1. Why does the API composition exist?
 
-Works to show data:
-
-`<p>{{ title }}</p>`
-
-Important rules:
-
-- Inside, resides JavaScript.
-- Expressions only.
-- Gets evaluated once the state changes.
-
-GOOD practice:
+Before (API Options):
 
 ```JS
-{{ count + 1 }}
-{{ isDone ? 'Done' : 'Pending' }}
-
+export default {
+    data(),
+    methods: {},
+    computed: {},
+    watch: {},
+}
 ```
 
-BAD practice:
+Problems here on big projects:
 
-```
-{{ if (x) {...} }}
-{{ let a = 5 }}
-```
+- Relationed logic separated in diffrent blocks.
+- Reusable logic gets complicated.
+- Gigant components.
+
+API composition groups logic per functionallity, not per type.
 
 ---
 
-### 3. Directives: Instructions to Vue
+### 2. `setup()` - the new center
 
-Directives tell Vue how a node should be treated.
+In Vue 3 everything starts here:
 
-`v-bind` (binding attributes):
+```JS
+export default {
+    setup() {
+        // logics lives here
+    }
+}
+```
 
-`<img v-bind:src="imageUrl" />`
+But the real modern, resides in the use of:
 
-Shortcut:
+```JS
+<script setup>
+</script>
+```
 
-`<img :src="imageUrl">`
+`script setup` is officially sintetic sugar with recomendation
 
-Mindset:
+Use this from now on.
+
+---
+
+### 3. Real reactivity: `ref()`
+
+The reactive basic unit
+
+```JS
+import { ref } from 'vue'
+
+const count = ref(0)
+```
+
+Important concept:
+
+`ref()` returns a reactive object with a `.value` property
+
+Internally:
+
+```JS
+{
+    value: 0
+}
+```
+
+In JS:
+
+`count.value++`
+
+In template:
+
+`{{ count }}`
+
+In template `.value` it's NOT needed.
+
+How to know when to use `ref()`?
+
+- Numbers.
+- Strings.
+- Booleans.
+- Simple values.
 
 > _M. SÁNCHEZ:_
 >
-> This attribute depends on the state
-
-Do not _set_ attributes manually. Let them react.
-
-`v-on` (events)
-
-`<button v-on:click="increment">+</button>`
-
-Shortcut:
-
-`<button @click="increment">+</button>`
-
-Vue listens to the event and runs **logic**, not the DOM.
+> If primitive -> ref.
 
 ---
 
-### 4. Conditional render
+### 4. Reactive objects: `reactive()`
 
 ```JS
-v-if
+import { reactive } from 'vue'
 
-<p v-if="isLogged">Bienvenido</p>
+const state = reactive({
+    name: 'Raven',
+    level: 3,
+})
 ```
 
-- The element exists or not
-- Its created and destroyed
+`.value` doesn't exist here.
 
-`v-else` / `v-else-if`
+`state.level++`
+
+How to know when to use `reactive`?
+
+- Complex objects.
+- Forms.
+- Grouped structures.
+
+> _M. SÁNCHEZ:_
+>
+> 80% of the times `ref` is used, even for arrays.
+
+Yes, **even with arrays**:
+
+`const todos = ref([])`
+
+---
+
+### 5. `computed()` - derive status
+
+This is getting elegant:
 
 ```JS
-<p v-if="loading">Loading...</p>
-<p v-else>Ready</p>
+import { computed } from 'vue'
+
+const completeCount = computed(() =>
+    todos.value.filter(t => t.done).length
+)
 ```
+
+Characteristics:
+
+- Gets calculated automatically.
+- Result gets cached.
+- Is reactive.
+
+Do never put heavy logic in the template. Use `computed`.
+
+---
+
+### 6. `watch()` - reaction to changes
+
+When logic needs to be runned over changes?
 
 ```JS
-v-show
+import { watch } from 'vue'
 
-<p v-show="isLogged">Bienvenido</p>
+watch(count, (newVal, oldVal) => {
+    console.log('Change:', newVal)
+})
 ```
 
-- Exist since always.
-- The only change is `display: none`.
+Use it when:
 
-Practical rule:
+- Saving on localStorage.
+- API calls.
+- Running side effects.
 
-- Frequent changes, use v-show.
-- Occasional changes, use v-if.
+> _M. SÁNCHEZ:_
+>
+> If you can use `computed`, don't use `watch`.
 
 ---
 
-### 5. Lists with `v-for` (very important)
+### 7. Life's cycle (lifecycle hooks)
+
+In API composition:
 
 ```JS
-<li v-for="todo in todos" :key="todo.id">
-    {{ todo.text }}
-</li>
+import { onMounted } from 'vue'
+
+onMounted(() => {
+    console.log('Mounted component')
+})
 ```
 
-The `:key` it's not optative. Vue uses the key for:
+Common hooks:
 
-- Node's identification.
-- Render's optimization.
-- Good to Avoid visual bugs.
+- `onMounted`
+- `onUpdate`
+- `onUnmounted`
 
-DON'T:
-
-`:key="index"`
-
-INSTEAD, DO:
-
-`:key="todo.id"`
+Use it when necessary only.
 
 ---
 
-### 6. State and methods (base concept)
+### 8. The right mindset with API composition
 
-Without entering to the composition API, key concept is:
+The modern pattern now is:
 
-- State: reactive data.
-- Methods: functions that change the state.
+- `ref` / reactive -> state
+- `computed` -> devirated state
+- _methods_ -> regular functions
+- `watch` -> side effects
+- `<template>` -> state's projection
 
-Event -> Method -> State changes -> Vue updates the UI.
-
-DONT'S:
-
-- DOM Manipulation.
-- "Forced" updates.
+No more artifitial separation.
 
 ---
 
-### 7. Vue re-renders... everything?
+### 9. Minimum modern sample
 
-Short answer **no**, but Vue do:
+```JS
+<script setup>
+    import { ref, computed } from 'vue'
 
-- Detects whats changed.
-- Compares virtual DOM.
-- Updates **necessary's only**.
+    const count = ref(0)
 
-And this is why:
+    function increment() {
+        count.value++
+    }
 
-- No worrys for premature performance issues.
-- Gain focus over arquitecture.
+    const double = computed(() => count.value * 2)
+</script>
+
+<template>
+    <p>Count: {{ count }}</p>
+    <p>Double: {{ double }}</p>
+    <button @click="increment">+</button>
+</template>
+```
+
+This is pro modern Vue. Key diffrence:
+
+- Options API
+
+  > Where do i put this?
+
+- Composition API
+  > What logic belongs together? This difference changes everything.
 
 ---
 
-### 8. Common anti-patterns (avoid them from now on)
-
-Heavy logic on the template:
-
-`{{ calculateTotal(items, tax, discount) }}`
-
-Use of Vue as jQuery:
-
-`document.querySelector(...)`
-
-Ambiguous states:
-
-`status = 1 // que es 1?`
-
-Clearance gets the best out of Vue.
-
----
-
-**Final thoughts** over level two / 2 - Inside Vue:
+**Final thoughts** over level three / 3 - Composition API:
 
 - Template is declarative.
 - `{{  }}` just for expressions.
