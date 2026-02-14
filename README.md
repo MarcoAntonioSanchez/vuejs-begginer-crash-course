@@ -1,273 +1,230 @@
 # Vue Begginer's crash course
 
-## Level 3 - Composition API
+## Level 4 - Real componentization and communication
 
 > _M. SÁNCHEZ:_
 >
-> Here, memorizes stop and understanding beggins.
+> Here, crafting "components" stops and system design beggins.
 
-This level's goal is to fully understand the following:
+Level's goals:
 
-- Why the API composition exists.
-- How does it really works.
-- Modern reactivity mindset.
-- When to use `ref`, `reactive`, `computed`, `watch`.
-- How everything connects to the template.
-
----
-
-### 1. Why does the API composition exist?
-
-Before (API Options):
-
-```JS
-export default {
-    data(),
-    methods: {},
-    computed: {},
-    watch: {},
-}
-```
-
-Problems here on big projects:
-
-- Relationed logic separated in diffrent blocks.
-- Reusable logic gets complicated.
-- Gigant components.
-
-API composition groups logic per functionallity, not per type.
+- Think in components as responsibilities units.
+- Understanding **unidirectional data flow**.
+- Mastering:
+  - `props`.
+  - `emit`.
+- Avoid unnecessary couplings.
+- Consolidates a frontend arquitect mindset.
 
 ---
 
-### 2. `setup()` - the new center
+### 1. The absolute Vue rule: One-Way data flow
 
-In Vue 3 everything starts here:
+The right Vue flow is:
 
-```JS
-export default {
-    setup() {
-        // logics lives here
-    }
-}
-```
+Father -> `props` -> Son
+Son -> `emit` -> Father
 
-But the real modern, resides in the use of:
+Never the way arround. If this gets broken, then:
 
-```JS
+- Clearance gets broken.
+- Maintenance gets broken.
+- Scaffold gets broken.
+
+Vue forces you to a clean arquitecture.
+
+---
+
+### 2. What is a component? (for real)
+
+A component is not:
+
+> "A .vue file".
+
+A component is:
+
+> A visual responsibility unit + encapsulated logic.
+
+There's always room for questions like:
+
+- What does it do?
+- What writes?
+- What communicates?
+- What shouldn't happen?
+
+If it know's too much -> it's wrongly desing.
+
+---
+
+### 3. `props` - decent communication
+
+In the father:
+
+`<TodoItem :todo="todo" />`
+
+In the son:
+
+```HTML
 <script setup>
+    defineProps({
+        todo: Object
+    })
 </script>
 ```
 
-`script setup` is officially sintetic sugar with recomendation
+Important concepts:
 
-Use this from now on.
+- `props` are **readonly**.
+- Dont mod them.
+- Respect the data controlled by the father.
 
----
-
-### 3. Real reactivity: `ref()`
-
-The reactive basic unit
-
-```JS
-import { ref } from 'vue'
-
-const count = ref(0)
-```
-
-Important concept:
-
-`ref()` returns a reactive object with a `.value` property
-
-Internally:
-
-```JS
-{
-    value: 0
-}
-```
-
-In JS:
-
-`count.value++`
-
-In template:
-
-`{{ count }}`
-
-In template `.value` it's NOT needed.
-
-How to know when to use `ref()`?
-
-- Numbers.
-- Strings.
-- Booleans.
-- Simple values.
-
-> _M. SÁNCHEZ:_
->
-> If primitive -> ref.
+If props are modified directly -> bad design.
 
 ---
 
-### 4. Reactive objects: `reactive()`
+### 4. `emit` - ASC communcation
 
-```JS
-import { reactive } from 'vue'
+The son DOESN'T mod the global state. The son communicates intention.
 
-const state = reactive({
-    name: 'Raven',
-    level: 3,
-})
-```
+In the son:
 
-`.value` doesn't exist here.
-
-`state.level++`
-
-How to know when to use `reactive`?
-
-- Complex objects.
-- Forms.
-- Grouped structures.
-
-> _M. SÁNCHEZ:_
->
-> 80% of the times `ref` is used, even for arrays.
-
-Yes, **even with arrays**:
-
-`const todos = ref([])`
-
----
-
-### 5. `computed()` - derive status
-
-This is getting elegant:
-
-```JS
-import { computed } from 'vue'
-
-const completeCount = computed(() =>
-    todos.value.filter(t => t.done).length
-)
-```
-
-Characteristics:
-
-- Gets calculated automatically.
-- Result gets cached.
-- Is reactive.
-
-Do never put heavy logic in the template. Use `computed`.
-
----
-
-### 6. `watch()` - reaction to changes
-
-When logic needs to be runned over changes?
-
-```JS
-import { watch } from 'vue'
-
-watch(count, (newVal, oldVal) => {
-    console.log('Change:', newVal)
-})
-```
-
-Use it when:
-
-- Saving on localStorage.
-- API calls.
-- Running side effects.
-
-> _M. SÁNCHEZ:_
->
-> If you can use `computed`, don't use `watch`.
-
----
-
-### 7. Life's cycle (lifecycle hooks)
-
-In API composition:
-
-```JS
-import { onMounted } from 'vue'
-
-onMounted(() => {
-    console.log('Mounted component')
-})
-```
-
-Common hooks:
-
-- `onMounted`
-- `onUpdate`
-- `onUnmounted`
-
-Use it when necessary only.
-
----
-
-### 8. The right mindset with API composition
-
-The modern pattern now is:
-
-- `ref` / reactive -> state
-- `computed` -> devirated state
-- _methods_ -> regular functions
-- `watch` -> side effects
-- `<template>` -> state's projection
-
-No more artifitial separation.
-
----
-
-### 9. Minimum modern sample
-
-```JS
+```HTML
 <script setup>
-    import { ref, computed } from 'vue'
+const emit = defineEmits(['toggle'])
 
-    const count = ref(0)
-
-    function increment() {
-        count.value++
-    }
-
-    const double = computed(() => count.value * 2)
+function handleClick() {
+  emit('toggle')
+}
 </script>
 
-<template>
-    <p>Count: {{ count }}</p>
-    <p>Double: {{ double }}</p>
-    <button @click="increment">+</button>
-</template>
 ```
 
-This is pro modern Vue. Key diffrence:
+In the father:
 
-- Options API
+```JS
+<TodoItem
+  :todo="todo"
+  @toggle="toggleTodo(todo.id)"
+/>
 
-  > Where do i put this?
+```
 
-- Composition API
-  > What logic belongs together? This difference changes everything.
+The right mindset. The son says:
+
+> "Hey father, something change"
+
+The father says:
+
+> "I handle the state"
+
+This is clear arquitecture.
 
 ---
 
-**Final thoughts** over level three / 3 - Composition API:
+### 5. The right design for a To-Do (arquitectural vision)
 
-- Template is declarative.
-- `{{  }}` just for expressions.
-- `v-bind` connects state -> attributes.
-- `v-on` connects events -> logic.
-- `v-if` and `v-for` controlls -> render.
-- UI reacts to state not to the DOM.
+Future structure should look like this:
+
+- App
+  - TodoContainer
+    - TodoForm
+    - TodoList
+      - TodoItem
+    - TodoFilters
+
+Responsibilities:
+
+- `TodoForm` -> creates chores only.
+- `TodoList` -> renderize list.
+- `TodoItem` -> representation.
+- `TodoFilters` -> change view.
+- `TodoContainer` -> handles state
+
+The state lives the highest possible.
+
+---
+
+### 6. Single Responsibility Principle (SRP)
+
+Bad design:
+
+- TodoList.vue
+  - handles state
+  - saves in localStorage
+  - make validations
+  - filters
+  - render
+
+Good design:
+
+- State inside container
+- Presentation inside sons
+- Reusable logic inside _composables_ (further on)
+
+---
+
+### 7. Typed props (pro mindset)
+
+Although TypeScript won't be in for now, get this into your mindset:
+
+```JS
+defineProps({
+  todo: {
+    type: Object,
+    required: true
+  }
+})
+```
+
+This is:
+
+- Documented
+- Protected
+- Bugs prevented
+
+---
+
+### 8. Common errors on this level (must avoid them)
+
+- Son modifies props (DON'T).
+- Son imports the state from the father (DON'T).
+- Too many props = Signs a bad design (DON'T).
+- Bad names on events. e.g. `clickEventDataChangeThing` (DON'T).
+
+Cleared and convetioned names (DO):
+
+- `add` (BETTER).
+- `remove` (BETTER).
+- `toggle` (BETTER).
+- `update` (BETTER).
+
+---
+
+### 9. Senior mindset (very importnat)
+
+When you find your self designing components, aks your self:
+
+- Is this component reusable?
+- It is coupled to a specific context?
+- It's prepared for isoleted testing?
+
+If the answer to the three of them is **YES**, this is the way.
+
+---
+
+**Final thoughts** over level four / 4 - Real componentization and communication:
+
+Proof that the dev mindset it's evolving in a good way with this level, will be:
+
+- Flow it's unidirectional.
+- Props go down.
+- Emits go up.
+- State lives up on the top.
+- Components have a clear responsibilitie.
+- Won't brake at encapsulation.
 
 ---
 
 > 🐦‍⬛ _RVN:_
 >
 > Happy hacking 🚀
-
----
