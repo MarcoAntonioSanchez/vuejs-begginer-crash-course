@@ -1,227 +1,188 @@
 # Vue Begginer's crash course
 
-## Level 4 - Real componentization and communication
+## Level 5 - Professional arquitecture and composables
 
 > _M. SÁNCHEZ:_
 >
-> Here, crafting "components" stops and system design beggins.
+> From a visual component to a Vue software arquitecture.
 
 Level's goals:
 
-- Think in components as responsibilities units.
-- Understanding **unidirectional data flow**.
-- Mastering:
-  - `props`.
-  - `emit`.
-- Avoid unnecessary couplings.
-- Consolidates a frontend arquitect mindset.
+Separate's:
+
+- User interface (UI).
+- State.
+- Business logic.
+- Infrastructure.
+
+For the projec to:
+
+- Scale.
+- Be legible.
+- Be testeable.
+- Have no dependency to hugh components.
 
 ---
 
-### 1. The absolute Vue rule: One-Way data flow
+### 1. The tipycal problem (WON'T)
 
-The right Vue flow is:
+Most common error sample, about a `TodoApp.vue`:
 
-Father -> `props` -> Son
-Son -> `emit` -> Father
+- Handles state.
+- Uses localStorage to save.
+- Validates form.
+- Filters tasks.
+- Renders list.
+- Controlls UI.
 
-Never the way arround. If this gets broken, then:
-
-- Clearance gets broken.
-- Maintenance gets broken.
-- Scaffold gets broken.
-
-Vue forces you to a clean arquitecture.
+Works... but this is a time bomb. In a real project this will get unmaintenable.
 
 ---
 
-### 2. What is a component? (for real)
+### 2. Solution: Layers (backend mindset in the frontend)
 
-A component is not:
+Let's divide responsibilites:
 
-> "A .vue file".
+`UI` (components) -> `Orquestation` (views / containers) -> `Reusable logic` (composables) -> `Infrastructure` (services) -> `Pured utilities` (utils)
 
-A component is:
-
-> A visual responsibility unit + encapsulated logic.
-
-There's always room for questions like:
-
-- What does it do?
-- What writes?
-- What communicates?
-- What shouldn't happen?
-
-If it know's too much -> it's wrongly desing.
+Vue works better when it's used like this.
 
 ---
 
-### 3. `props` - decent communication
+### 3. New folder structure
 
-In the father:
+From now on, the Todo project should evolve like this:
 
-`<TodoItem :todo="todo" />`
+- src/
+  - components/
+    - ui/
+    - todo/
+  - composables/
+    - useTodos.js
+  - services/
+    - storage.service.js
+  - utils/
+    - filters.js
+  - views/
+    - TodoView.vue
+  - App.vue
 
-In the son:
-
-```HTML
-<script setup>
-    defineProps({
-        todo: Object
-    })
-</script>
-```
-
-Important concepts:
-
-- `props` are **readonly**.
-- Dont mod them.
-- Respect the data controlled by the father.
-
-If props are modified directly -> bad design.
+Not decoration only, each folder represents an arquitectonic layer.
 
 ---
 
-### 4. `emit` - ASC communcation
+### 4. What is a composable?
 
-The son DOESN'T mod the global state. The son communicates intention.
+> _M. SÁNCHEZ:_
+>
+> A composable is: a function that encapsulates reactivity state + reusable logic.
 
-In the son:
+Start's with: `use`. e.g.
 
-```HTML
-<script setup>
-const emit = defineEmits(['toggle'])
+```JS
+export function useTodos() {
+    const todos = ref([])
 
-function handleClick() {
-  emit('toggle')
+    function addTodo(text) {
+        todos.value.push({
+            id: Date.now(),
+            text,
+            done: false
+        })
+    }
+
+    return { todos, addTodo }
 }
-</script>
-
 ```
 
-In the father:
+A composable won't depend on the UI. That's the power.
+
+---
+
+### 5. Critic diffrence
+
+**Component**: Render's interface.
+
+**Composable**: Contains behavior.
+
+The composable lives despite the UI changes.
+
+---
+
+### 6. Services - Infrastructure
+
+Heres relies all the _external_
+
+- localStorage.
+- API.
+- fetch.
+- backend.
+
+e.g.
 
 ```JS
-<TodoItem
-  :todo="todo"
-  @toggle="toggleTodo(todo.id)"
-/>
-
+export function saveTodos(todos) {
+    localStorage.setItem('todos', JSON.stringify(todos))
+}
 ```
 
-The right mindset. The son says:
+Why it separates? Because tomorrow can be changed on:
 
-> "Hey father, something change"
+- API REST.
+- IndexedDB.
+- Firebase.
 
-The father says:
-
-> "I handle the state"
-
-This is clear arquitecture.
+And this wat, the UI won't even notice.
 
 ---
 
-### 5. The right design for a To-Do (arquitectural vision)
+### 7. Utils - Pure functions
 
-Future structure should look like this:
-
-- App
-  - TodoContainer
-    - TodoForm
-    - TodoList
-      - TodoItem
-    - TodoFilters
-
-Responsibilities:
-
-- `TodoForm` -> creates chores only.
-- `TodoList` -> renderize list.
-- `TodoItem` -> representation.
-- `TodoFilters` -> change view.
-- `TodoContainer` -> handles state
-
-The state lives the highest possible.
-
----
-
-### 6. Single Responsibility Principle (SRP)
-
-Bad design:
-
-- TodoList.vue
-  - handles state
-  - saves in localStorage
-  - make validations
-  - filters
-  - render
-
-Good design:
-
-- State inside container
-- Presentation inside sons
-- Reusable logic inside _composables_ (further on)
-
----
-
-### 7. Typed props (pro mindset)
-
-Although TypeScript won't be in for now, get this into your mindset:
+It doesn't have state nor Vue:
 
 ```JS
-defineProps({
-  todo: {
-    type: Object,
-    required: true
-  }
-})
+export function filterComplete(todos) {
+  return todos.filter(t => t.done)
+}
 ```
 
-This is:
-
-- Documented
-- Protected
-- Bugs prevented
+This is pure JavaScript.
 
 ---
 
-### 8. Common errors on this level (must avoid them)
+### 8. Real flow (now)
 
-- Son modifies props (DON'T).
-- Son imports the state from the father (DON'T).
-- Too many props = Signs a bad design (DON'T).
-- Bad names on events. e.g. `clickEventDataChangeThing` (DON'T).
+Your Vue app should start looking like this:
 
-Cleared and convetioned names (DO):
+Component UI -> use's composable -> composable use's service -> service access storage
 
-- `add` (BETTER).
-- `remove` (BETTER).
-- `toggle` (BETTER).
-- `update` (BETTER).
+Now this do count as arquitecture.
 
 ---
 
-### 9. Senior mindset (very importnat)
+### 9. Immediatly benefits
 
-When you find your self designing components, aks your self:
+After this i could:
 
-- Is this component reusable?
-- It is coupled to a specific context?
-- It's prepared for isoleted testing?
+- Reuse logic between pages.
+- Change UI without breaking logic.
+- Test without DOM.
+- Ease backend migration.
+- Implement `Pinia` without refactoring everything.
 
-If the answer to the three of them is **YES**, this is the way.
+This is the diffrence between a demo project and a professional project.
 
 ---
 
-**Final thoughts** over level four / 4 - Real componentization and communication:
+**Final thoughts** over level five / 5 - Professional arquitecture and composables:
 
-Proof that the dev mindset it's evolving in a good way with this level, will be:
+If this is all cleared, i just crossed the barrier of:
 
-- Flow it's unidirectional.
-- Props go down.
-- Emits go up.
-- State lives up on the top.
-- Components have a clear responsibilitie.
-- Won't brake at encapsulation.
+- Components = UI.
+- Composables = reactive logic.
+- Services = infrastructure.
+- Utils = pure functions.
+- Real separation of concerns.
 
 ---
 
