@@ -1,10 +1,10 @@
 # Vue Begginer's crash course
 
-## Level 5 - Professional arquitecture and composables
+## Level 5 - Professional architecture and composables
 
 > _M. SÁNCHEZ:_
 >
-> From a visual component to a Vue software arquitecture.
+> From a visual component to a Vue software architecture.
 
 Level's goals:
 
@@ -67,7 +67,7 @@ From now on, the Todo project should evolve like this:
     - TodoView.vue
   - App.vue
 
-Not decoration only, each folder represents an arquitectonic layer.
+Not decoration only, each folder represents an architectonic layer.
 
 ---
 
@@ -156,7 +156,7 @@ Your Vue app should start looking like this:
 
 Component UI -> use's composable -> composable use's service -> service access storage
 
-Now this do count as arquitecture.
+Now this do count as architecture.
 
 ---
 
@@ -174,7 +174,7 @@ This is the diffrence between a demo project and a professional project.
 
 ---
 
-**Final thoughts** over level five / 5 - Professional arquitecture and composables:
+**Final thoughts** over level five / 5 - Professional architecture and composables:
 
 If this is all cleared, i just crossed the barrier of:
 
