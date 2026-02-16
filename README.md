@@ -15,7 +15,7 @@ Separate's:
 - Business logic.
 - Infrastructure.
 
-For the projec to:
+For the project to:
 
 - Scale.
 - Be legible.
@@ -132,7 +132,7 @@ Why it separates? Because tomorrow can be changed on:
 - IndexedDB.
 - Firebase.
 
-And this wat, the UI won't even notice.
+And this way, the UI won't even notice.
 
 ---
 
@@ -182,7 +182,8 @@ If this is all cleared, i just crossed the barrier of:
 - Composables = reactive logic.
 - Services = infrastructure.
 - Utils = pure functions.
-- Real separation of concerns.
+
+Real separation of concerns.
 
 ---
 
